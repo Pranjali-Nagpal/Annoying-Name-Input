@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fair Slot Machine Input (Auto Reset)</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .container {
+            background: white;
+            padding: 50px;
+            border: 4px solid #000;
+            box-shadow: 15px 15px 0px #555;
+            text-align: center;
+            width: 400px;
+            border-radius: 8px;
+        }
+
+        h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #555;
+        }
+
+        /* The display where the name is built */
+        .name-container {
+            background-color: #f4f4f4;
+            border: 2px inset #ccc;
+            padding: 15px;
+            margin-bottom: 30px;
+        }
+
+        .name-label {
+            font-size: 12px;
+            color: #888;
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        .name-display {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            min-height: 40px;
+            color: #000;
+            word-wrap: break-word;
+        }
+
+        /* The flashing letter box */
+        .slot-box {
+            font-size: 100px;
+            font-weight: bold;
+            border: 6px solid #333;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 30px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .controls button {
+            padding: 15px 25px;
+            font-size: 18px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            border: 3px solid #000;
+            background: #fff;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px #000;
+        }
+
+        .controls button:active {
+            transform: translateY(0px);
+            box-shadow: none;
+            background: #000;
+            color: #fff;
+        }
+
+        #confirm-btn {
+            background-color: #90ee90; /* Green for go */
+            display: none; /* Hidden until paused */
+        }
+
+        #action-btn {
+            min-width: 120px;
+        }
+
+        /* SUBMIT BUTTON */
+        #submit-btn {
+            width: 100%;
+            background-color: #337ab7; /* Official Blue */
+            color: white;
+            border: 2px solid #000;
+            padding: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+        
+        #submit-btn:hover {
+            background-color: #286090;
+        }
+
+        #reset-link {
+            display: block;
+            margin-top: 20px;
+            color: #d9534f;
+            font-size: 12px;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        
+        #reset-link:hover {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="name-container">
+        <span class="name-label">YOUR NAME SO FAR:</span>
+        <div class="name-display" id="finalName">_</div>
+    </div>
+
+    <div class="slot-box" id="slot">A</div>
+
+    <div class="controls">
+        <button id="action-btn" onclick="toggleSpin()">STOP</button>
+        <button id="confirm-btn" onclick="confirmLetter()">CONFIRM</button>
+    </div>
+
+    <button id="submit-btn" onclick="submitName()">Submit Name</button>
+
+    <div id="reset-link" onclick="resetAll()">Clear Name & Start Over</div>
+</div>
+
+<script>
+    const slot = document.getElementById('slot');
+    const actionBtn = document.getElementById('action-btn');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const finalNameDisplay = document.getElementById('finalName');
+
+    // Characters available in the roulette
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -'";
+    
+    let currentName = "";
+    let intervalId = null;
+    let isSpinning = false;
+
+    // Start the loop immediately
+    startSpin();
+
+    function startSpin() {
+        isSpinning = true;
+        actionBtn.innerText = "STOP";
+        confirmBtn.style.display = "none"; 
+        
+        // Spin Logic: Change letter every 150ms (Slower speed)
+        clearInterval(intervalId); 
+        intervalId = setInterval(() => {
+            slot.innerText = chars.charAt(Math.floor(Math.random() * chars.length));
+        }, 100); 
+    }
+
+    function toggleSpin() {
+        if (isSpinning) {
+            clearInterval(intervalId);
+            isSpinning = false;
+            
+            actionBtn.innerText = "SPIN AGAIN";
+            confirmBtn.style.display = "inline-block"; 
+        } else {
+            startSpin();
+        }
+    }
+
+    function confirmLetter() {
+        let letter = slot.innerText;
+        currentName += letter;
+        finalNameDisplay.innerText = currentName + "_"; 
+        startSpin();
+    }
+
+    function resetAll() {
+        currentName = "";
+        finalNameDisplay.innerText = "_";
+        // If we are not spinning, start spinning again
+        if (!isSpinning) startSpin();
+    }
+
+    // NEW: Submit Function with RESET
+    function submitName() {
+        if(currentName.length === 0) {
+            alert("Please construct a name first!");
+            return;
+        }
+
+        // The confirm alert
+        let result = confirm("Are you sure you want to submit the name:\n\n" + currentName + "\n\nClick OK to proceed or Cancel to keep typing.");
+        
+        if (result) {
+            alert("Congratulations! Name Submitted: " + currentName);
+            // TRIGGER THE RESET HERE
+            resetAll();
+        }
+    }
+</script>
+
+</body>
+</html>
